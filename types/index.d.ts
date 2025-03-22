@@ -91,6 +91,7 @@ interface InterviewFormProps {
   level: string;
   type: string;
   techstack: string[];
+  majorBranches: string[];
   amount: number;
 }
 
