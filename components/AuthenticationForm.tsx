@@ -8,28 +8,48 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import Link from "next/link"
+import { toast } from "sonner"
 
 
-const formSchema = z.object({
-  username: z.string().min(2).max(50),
-})
+const authFormSchema = (type: FormType) => {
+  return z.object({
+    name: type === "sign-up" ? z.string().min(3).max(50) : z.string().optional(),
+    email: z.string().email(),
+    password: z.string().min(6).max(100),
+  })
+
+}
+
+
+
 
 
 const AuthenticationForm = ({ type }: { type: FormType }) => {
-
+  const formSchema = authFormSchema(type)
   // 1. Form Definition.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      name: "",
+      email: "",
+      password: "",
     },
   })
 
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values)
+    try {
+      if (type === "sign-in") {
+        console.log("Sign-in", values)
+      }
+      else {
+        console.log("Sign-up", values
+        )
+      }
+    } catch (error) {
+      console.log(values)
+      toast.error(`Something went wrong: ${error}`)
+    }
   }
 
   const whetherSignedIn = type === "sign-in"
@@ -55,9 +75,9 @@ const AuthenticationForm = ({ type }: { type: FormType }) => {
 
         <p>
           {whetherSignedIn ? 'New to AI Interviewer?' : 'Already have an account?'}
-            <Link href={!whetherSignedIn ? '/sign-in' : '/sign-up'}
-              className="font-bold text-user-primary ml-1"
-            >{!whetherSignedIn ? "Sign-in" : "Sign-up"}</Link>
+          <Link href={!whetherSignedIn ? '/sign-in' : '/sign-up'}
+            className="text-center font-bold ml-1"
+          >{!whetherSignedIn ? "Sign-in" : "Sign-up"}</Link>
 
         </p>
       </div>
