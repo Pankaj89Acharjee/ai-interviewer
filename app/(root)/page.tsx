@@ -1,6 +1,5 @@
 import InterviewCards from '@/components/InterviewCards'
 import { Button } from '@/components/ui/button'
-import { dummyInterviews } from '@/constants'
 import { getCurrentUser, } from '@/lib/actions/auth.action'
 import { getInterviewByUserId, getLatestInterviews } from '@/lib/actions/general.action'
 import Image from 'next/image'
