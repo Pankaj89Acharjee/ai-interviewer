@@ -26,6 +26,8 @@
 4. The copy paste the public key from the VAPI website under the ORG SETTING option from the Navbar of VAPI's website.
 5. First we will Make API endpoints to call the AI Agent to receive some information from the user and feed it in the Gemini. The Gemini will then send the response through the API to the server. For this custom API routes we need ROUTE HANDLERS of NextJS.
 
+## Setup Workflows in VAPI
+1. Follow this website to modify and customise workflow. (https://dashboard.vapi.ai/workflows/af6fbd05-f564-433f-9fd5-f999b3301cd6)
 
 ## Deploy on Vercel
 

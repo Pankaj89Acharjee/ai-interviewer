@@ -122,3 +122,4 @@ export async function isAuthenticated() {
     // Converting a value to be truthy or falsy in Boolean
     return !!user
 }
+

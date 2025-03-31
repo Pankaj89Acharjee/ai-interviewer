@@ -5,10 +5,12 @@ import { getRandomInterviewCover } from '@/lib/utils';
 import { Button } from './ui/button';
 import Link from 'next/link';
 import TechIcons from './TechIcons';
+import { getFeedbackByInterviewId } from '@/lib/actions/general.action';
 
-const InterviewCards = ({ interviewId, role, type, techstack, createdAt }: InterviewCardProps) => {
+const InterviewCards = async ({ id, userId, role, type, techstack, createdAt }: InterviewCardProps) => {
 
-    const feedback = null as Feedback | null
+    const feedback = userId && id ? await getFeedbackByInterviewId({ interviewId: id, userId }) : null;
+
     //gi = global and case insensitive
     // if type is mix, then set it to mixed, else set it to the type
     const normalizedType = /mix/gi.test(type) ? 'Mixed' : type;
@@ -61,10 +63,10 @@ const InterviewCards = ({ interviewId, role, type, techstack, createdAt }: Inter
 
                 {/* For techstack icons */}
                 <div className='flex flex-row gap-2 mt-4 justify-between items-center'>
-                <TechIcons techStack={ techstack} />
+                    <TechIcons techStack={techstack} />
 
                     <Button className='btn-primary'>
-                        <Link href={feedback ? `/interview/${interviewId}/feedback` : `/interview/${interviewId}`}>
+                        <Link href={feedback ? `/interview/${id}/feedback` : `/interview/${id}`}>
 
                             {feedback ? 'View Feedback' : 'Start Interview'}
                         </Link>

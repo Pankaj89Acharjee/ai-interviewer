@@ -1,11 +1,28 @@
 import InterviewCards from '@/components/InterviewCards'
 import { Button } from '@/components/ui/button'
 import { dummyInterviews } from '@/constants'
+import { getCurrentUser, } from '@/lib/actions/auth.action'
+import { getInterviewByUserId, getLatestInterviews } from '@/lib/actions/general.action'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
-const page = () => {
+const page = async () => {
+  const user = await getCurrentUser()
+
+  // PARALLEL DATA FETCHING = An advance method of calling two API calls at the same time independent of each other
+  const [userInterviews, latestInterviews] = await Promise.all([
+    await getInterviewByUserId(user?.id!),
+    await getLatestInterviews({ userId: user?.id! })
+  ]);
+
+
+
+
+  const hasPastInterviews = userInterviews?.length > 0;
+  const hasUpcomingInterviews = latestInterviews?.length > 0;
+
+
   return (
     <>
       <section className='card-cta'>
@@ -18,7 +35,7 @@ const page = () => {
           <Button
             asChild
             className='btn-primary max-sm:w-full justify-center items-center text-center'>
-            <Link href='/practice' className='w-full'>
+            <Link href='/interview' className='w-full'>
               Start Practicing
             </Link>
           </Button>
@@ -39,23 +56,33 @@ const page = () => {
         <h2 className='text-accent-foreground'>Your Interview Section</h2>
 
         <div className='interviews-section'>
-          {dummyInterviews.map((interview) => (
-            <InterviewCards {...interview} key={interview.id} />
-          ))}
+          {hasPastInterviews ? (
+            userInterviews?.map((interview) => (
+              <InterviewCards {...interview} key={interview.id} />
+            ))
+          ) : (
+            <p>Sorry! You don't have taken any interviews till now</p>
+          )}
         </div>
       </section>
 
 
 
       <section className='flex flex-col gap-6 mt-8'>
-        <h2 className='text-accent-foreground'>Practice Interview</h2>
+        <h2 className='text-accent-foreground'>
+          Practice Interview
+        </h2>
 
 
         <div className='interviews-section'>
 
-          {dummyInterviews.map((interview) => (
-            <InterviewCards {...interview} key={interview.id}/>
-          ))}
+          {hasUpcomingInterviews ? (
+            latestInterviews?.map((interview) => (
+              <InterviewCards {...interview} key={interview.id} />
+            ))
+          ) : (
+            <p>Sorry! No new interview is available.</p>
+          )}
 
 
         </div>
