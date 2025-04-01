@@ -9,7 +9,7 @@ const Page = async () => {
 
     return (
         <div>
-            Interview Page
+            <h3>Interview Page</h3>
 
             <Agent userName={user?.name || ''} userId={user?.id} type="generate" />
         </div>

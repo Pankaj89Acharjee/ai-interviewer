@@ -11,15 +11,15 @@ const page = async () => {
 
   // PARALLEL DATA FETCHING = An advance method of calling two API calls at the same time independent of each other
   const [userInterviews, latestInterviews] = await Promise.all([
-    await getInterviewByUserId(user?.id!),
-    await getLatestInterviews({ userId: user?.id! })
+    getInterviewByUserId(user?.id!),
+    getLatestInterviews({ userId: user?.id! })
   ]);
 
 
 
 
-  const hasPastInterviews = userInterviews?.length > 0;
-  const hasUpcomingInterviews = latestInterviews?.length > 0;
+  const hasPastInterviews = userInterviews?.length! > 0;
+  const hasUpcomingInterviews = latestInterviews?.length! > 0;
 
 
   return (
@@ -57,7 +57,16 @@ const page = async () => {
         <div className='interviews-section'>
           {hasPastInterviews ? (
             userInterviews?.map((interview) => (
-              <InterviewCards {...interview} key={interview.id} />
+              <InterviewCards
+                key={interview.id}
+                userId={user?.id}
+                id={interview.id}
+                role={interview.role}
+                type={interview.type}
+                techstack={interview.techstack}
+                createdAt={interview.createdAt}
+
+              />
             ))
           ) : (
             <p>Sorry! You don't have taken any interviews till now</p>

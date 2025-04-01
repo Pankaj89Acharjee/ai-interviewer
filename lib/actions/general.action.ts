@@ -4,6 +4,9 @@ import { feedbackSchema } from "@/constants";
 import { db, auth } from "@/firebase/admin";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GEMINI_AI_API_KEY });
 
 
 export async function getInterviewByUserId(userId: string): Promise<Interview[] | null> {
@@ -53,59 +56,83 @@ export async function getInterviewById(id: string): Promise<Interview[] | null> 
 }
 
 
+
+
 export async function createFeedback(params: CreateFeedbackParams) {
-    const { interviewId, userId, transcript } = params
+    const { interviewId, userId, transcript, feedbackId } = params;
 
     try {
-        const formattedTranscript = transcript.map(((sentence: { role: string; content: string; }) => (
-            `-${sentence.role}: ${sentence.content}\n`
-        ))).join('');
+        // ✅ Formatting transcript properly
+        const formattedTranscript = transcript.map((sentence) => (
+            `- ${sentence.role}: ${sentence.content}\n`
+        )).join('');
 
-        // sentence.role = AI said
-        // sentence.content = I gave answer....
+        const prompt = `
+         You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
 
+        Transcript:
+        ${formattedTranscript}
 
-        const { object: { totalScore, categoryScores, strengths, areasForImprovement, finalAssessment } } = await generateObject({
-            model: google('gemini-2.0-flash-001', {
-                structuredOutputs: false
-            }),
-            schema: feedbackSchema,
-            prompt: `You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Do not be lenient with the candidate. If there are mistakes or areas for improvement, point them out.,
-            ${formattedTranscript}
+        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
+        - Communication Skills: Clarity, articulation, structured responses.
+        - Technical Knowledge: Understanding of key concepts for the role.
+        - Problem-Solving: Ability to analyze problems and propose solutions.
+        - Cultural & Role Fit: Alignment with company values and job role.
+        - Confidence & Clarity: Confidence in responses, engagement, and clarity.
+        
+        Return **only** a valid JSON object. Do **not** include markdown, code blocks, or extra text.
+        `;
 
-            Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
-            - **Communication Skills**: Clarity, articulation, structured responses.
-            - **Technical Knowledge**: Understanding of key concepts for the role.
-            - **Problem-Solving**: Ability to analyze problems and propose solutions.
-            - **Cultural & Role Fit**: Alignment with company values and job role.
-            - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
-            `,
-            system: 'You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories'
+        // ✅ Calling Gemini API correctly
+        const response = await ai.models.generateContent({
+            model: "gemini-2.0-flash-001",
+            contents: [{ role: "user", parts: [{ text: prompt }] }]
         });
 
-        const feedback = await db.collection('feedback').add({
+        // ✅ Parsing the AI response correctly
+        let textResponse = response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+        // ✅ Remove unwanted markdown/code blocks
+        textResponse = textResponse.replace(/^```json|```$/g, "").trim();
+
+        // ✅ Extract JSON safely using regex (handles cases where AI response contains extra text)
+        const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+        const jsonString = jsonMatch ? jsonMatch[0] : "{}";
+
+        // ✅ Parsing JSON safely
+        let object;
+        try {
+            object = JSON.parse(jsonString);
+        } catch (parseError) {
+            console.error("Error parsing AI response as JSON", parseError);
+            throw new Error("Invalid JSON format returned by AI.");
+        }
+
+        // ✅ Constructing feedback object
+        const feedback = {
             interviewId,
             userId,
-            totalScore,
-            categoryScores,
-            strengths,
-            areasForImprovement,
-            finalAssessment,
-            createdAt: new Date().toISOString()
-        })
+            totalScore: object.totalScore || 0,
+            categoryScores: object.categoryScores || {},
+            strengths: object.strengths || [],
+            areasForImprovement: object.areasForImprovement || [],
+            finalAssessment: object.finalAssessment || "",
+            createdAt: new Date().toISOString(),
+        };
 
-        return {
-            success: true,
-            feedbackId: feedback.id
-        }
+        // ✅ Saving to Firestore correctly
+        const feedbackRef = feedbackId
+            ? db.collection("feedback").doc(feedbackId)
+            : db.collection("feedback").doc();
+
+        await feedbackRef.set(feedback);
+
+        return { success: true, feedbackId: feedbackRef.id };
     } catch (error) {
-        console.error('error in saving feedback', error)
-        return {
-            success: false
-        }
+        console.error("Error in saving feedback", error);
+        return { success: false };
     }
-
 }
+
 
 
 export async function getFeedbackByInterviewId(params: GetFeedbackByInterviewIdParams): Promise<Feedback | null> {
@@ -113,21 +140,21 @@ export async function getFeedbackByInterviewId(params: GetFeedbackByInterviewIdP
     const { interviewId, userId } = params;
 
     const feedback = await db
-        .collection('feedback')       
+        .collection('feedback')
         .where('interviewId', '==', interviewId)
         .where('userId', '!=', userId)
         .limit(1)
         .get();
 
-        if(feedback.empty) return null
+    if (feedback.empty) return null
 
-        const feedbackDoc = feedback.docs[0]
+    const feedbackDoc = feedback.docs[0]
 
-        return {
-            id: feedbackDoc.id,
-            ...feedbackDoc.data()
-        } as Feedback
+    return {
+        id: feedbackDoc.id,
+        ...feedbackDoc.data()
+    } as Feedback
 
-  
+
 
 }
