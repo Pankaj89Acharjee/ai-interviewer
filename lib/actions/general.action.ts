@@ -11,12 +11,14 @@ export async function createFeedback(params: CreateFeedbackParams) {
 
     try {
         const formattedTranscript = transcript
-            .map((sentence: { role: string; content: string }) =>
-                    `- ${sentence.role}: ${sentence.content}\n`)
+            .map(
+                (sentence: { role: string; content: string }) =>
+                    `- ${sentence.role}: ${sentence.content}\n`
+            )
             .join("");
 
         const { object } = await generateObject({
-            model: google("gemini-2.0-flash-001", {
+            model: google("gemini-2.0-flash-001", {              
                 structuredOutputs: false,
             }),
             schema: feedbackSchema,

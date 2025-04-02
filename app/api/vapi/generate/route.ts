@@ -3,7 +3,7 @@ import { db } from '@/firebase/admin';
 import { GoogleGenAI } from "@google/genai";
 
 
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GEMINI_AI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY });
 // Creating function like below for Routers in NextJS
 
 
@@ -41,14 +41,17 @@ export async function POST(request: Request) {
 
         // For storing in the firebase database
         const interview = {
-            role, level, type,
-            techstack: techstack.split(','),
+            role: role,
+            type: type,
+            level: level,
+            techstack: techstack.split(","),
             questions: JSON.parse(questions || '[]'),
             userId: userid,
             finalized: true,
-            coverImage: getRandomInterviewCover(), //Later enable user to upload images
-            createdAt: new Date().toISOString()
-        }
+            coverImage: getRandomInterviewCover(),
+            createdAt: new Date().toISOString(),
+        };
+
 
         await db.collection('interviews').add(interview)
 
@@ -59,3 +62,6 @@ export async function POST(request: Request) {
         return Response.json({ success: false, error }, { status: 500 })
     }
 }
+
+
+
