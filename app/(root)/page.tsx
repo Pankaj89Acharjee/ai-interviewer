@@ -1,7 +1,7 @@
 import InterviewCards from '@/components/InterviewCards'
 import { Button } from '@/components/ui/button'
 import { getCurrentUser, } from '@/lib/actions/auth.action'
-import { getInterviewByUserId, getLatestInterviews } from '@/lib/actions/general.action'
+import { getInterviewsByUserId, getLatestInterviews } from '@/lib/actions/general.action'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
@@ -11,7 +11,7 @@ const page = async () => {
 
   // PARALLEL DATA FETCHING = An advance method of calling two API calls at the same time independent of each other
   const [userInterviews, latestInterviews] = await Promise.all([
-    getInterviewByUserId(user?.id!),
+    getInterviewsByUserId(user?.id!),
     getLatestInterviews({ userId: user?.id! })
   ]);
 
