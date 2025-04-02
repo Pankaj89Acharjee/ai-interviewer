@@ -121,6 +121,7 @@ const Agent = ({
         setCallStatus(CallStatus.CONNECTING);
 
         if (type === "generate") {
+            console.log("Call connecting")
             await vapi.start(process.env.NEXT_PUBLIC_VAPI_VOICE_ASSISTANT_ID!, {
                 variableValues: {
                     username: userName,
