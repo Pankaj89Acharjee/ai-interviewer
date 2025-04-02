@@ -8,7 +8,7 @@ import { feedbackSchema } from "@/constants";
 
 export async function createFeedback(params: CreateFeedbackParams) {
     const { interviewId, userId, transcript, feedbackId } = params;
-
+    console.log("REQ.BODY for creating feedback", interviewId, userId, transcript, feedbackId);
     try {
         const formattedTranscript = transcript
             .map(
@@ -18,7 +18,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
             .join("");
 
         const { object } = await generateObject({
-            model: google("gemini-2.0-flash-001", {              
+            model: google("gemini-2.0-flash-001", {
                 structuredOutputs: false,
             }),
             schema: feedbackSchema,
