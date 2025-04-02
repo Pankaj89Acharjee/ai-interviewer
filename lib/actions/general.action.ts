@@ -87,6 +87,7 @@ export async function getFeedbackByInterviewId(
     if (querySnapshot.empty) return null;
 
     const feedbackDoc = querySnapshot.docs[0];
+    if (!feedbackDoc) return null;
     return { id: feedbackDoc.id, ...feedbackDoc.data() } as Feedback;
 }
 
