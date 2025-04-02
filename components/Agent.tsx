@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
-import { toast } from "sonner";
+import { toast } from "sonner"
+
 
 enum CallStatus {
     INACTIVE = "INACTIVE",
@@ -64,12 +65,7 @@ const Agent = ({
 
         const onError = (error: Error) => {
             console.log("Error:", error);
-
-            if (error?.cause === 'no-room') {
-                alert("The meeting has ended. Please try again.");
-                setCallStatus(CallStatus.FINISHED);
-                router.push('/');
-            }
+            toast.error("Error: " + error.message)
         };
 
         vapi.on("call-start", onCallStart);
@@ -94,23 +90,20 @@ const Agent = ({
             setLastMessage(messages[messages.length - 1].content);
         }
 
-        const handleGenerateFeedback = async (message: SavedMessage[]) => {
+        const handleGenerateFeedback = async (messages: SavedMessage[]) => {
             console.log("handleGenerateFeedback");
 
             const { success, feedbackId: id } = await createFeedback({
                 interviewId: interviewId!,
                 userId: userId!,
-                transcript: message,
+                transcript: messages,
                 feedbackId,
             });
 
             if (success && id) {
-                toast.success("Feedback saved successfully.");
-                console.log("Feedback saved successfully, redirecting...:", id);
                 router.push(`/interview/${interviewId}/feedback`);
             } else {
-                console.log("Error saving feedback, redirecting to home.");
-                toast.error("Error saving feedback, redirecting to home.");
+                console.log("Error saving feedback");
                 router.push("/");
             }
         };
@@ -123,8 +116,6 @@ const Agent = ({
             }
         }
     }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
-
-
 
     const handleCall = async () => {
         setCallStatus(CallStatus.CONNECTING);
@@ -153,12 +144,6 @@ const Agent = ({
     };
 
     const handleDisconnect = () => {
-        if (callStatus === CallStatus.FINISHED) {
-            toast.error("Call is already finished. No need to stop.");
-            console.log("Call is already finished. No need to stop.");
-            return;
-        }
-
         setCallStatus(CallStatus.FINISHED);
         vapi.stop();
     };
@@ -170,7 +155,7 @@ const Agent = ({
                 <div className="card-interviewer">
                     <div className="avatar">
                         <Image
-                            src="/ai-avatar.png"
+                            src="/Logo-rem.png"
                             alt="profile-image"
                             width={65}
                             height={54}
